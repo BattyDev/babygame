@@ -1,4 +1,4 @@
-import { useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Cube, GameState, Spin } from './game';
 
 const TAURUS: Array<[number, number]> = [
@@ -60,6 +60,43 @@ export function Stage({
   onAdvance: () => void;
   onTurn: (index: number, dir: Exclude<Spin, null>) => void;
 }) {
+  return <Crossfade id={state.phase}>{scene(state, readonly, onPatch, onAdvance, onTurn)}</Crossfade>;
+}
+
+function Crossfade({ id, children }: { id: string; children: ReactNode }) {
+  const seen = useRef({ id, children });
+  const [leaving, setLeaving] = useState<ReactNode>(null);
+
+  if (seen.current.id !== id) {
+    setLeaving(seen.current.children);
+    seen.current = { id, children };
+  } else {
+    seen.current = { id, children };
+  }
+
+  useEffect(() => {
+    if (leaving == null) return;
+    const timer = window.setTimeout(() => setLeaving(null), 620);
+    return () => window.clearTimeout(timer);
+  }, [leaving]);
+
+  return (
+    <div className="stage-frame">
+      {leaving != null ? <div className="stage-leave">{leaving}</div> : null}
+      <div className="stage-enter" key={id}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function scene(
+  state: GameState,
+  readonly: boolean,
+  onPatch: (patch: Partial<GameState>) => void,
+  onAdvance: () => void,
+  onTurn: (index: number, dir: Exclude<Spin, null>) => void,
+) {
   switch (state.phase) {
     case 'intro':
       return (

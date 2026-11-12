@@ -193,7 +193,11 @@ export function Play() {
       {state.phase === 'reveal' && <Finale />}
       <Sentence state={state} />
       <Stage state={state} onPatch={patch} onAdvance={advance} onTurn={onTurn} />
-      {showCaption && caption && <p className="caption">{caption}</p>}
+      {showCaption && caption && (
+        <p key={caption} className="caption">
+          {caption}
+        </p>
+      )}
       <p className={linked ? 'link-dot on' : 'link-dot'}>{linked ? 'She can see this' : 'On your phone'}</p>
     </main>
   );

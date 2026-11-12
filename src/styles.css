@@ -196,12 +196,30 @@ input[type='text'], input:not([type]) {
   transform: translateY(-0.05rem);
 }
 
-.date.on { border-bottom-color: transparent; }
+.date.on {
+  border-bottom-color: transparent;
+  animation: fade-up 0.55s ease both;
+}
+
+.letters b { animation: e-in 0.5s ease both; }
 
 .sentence.large .letters { font-size: clamp(3.4rem, 8vw, 6rem); min-width: 7rem; }
 .sentence.large .rule { width: 7rem; border-bottom-width: 3px; }
 .sentence.large p { font-size: clamp(2rem, 5vw, 3.4rem); }
 .touch .letters { font-size: 3.6rem; }
+
+.stage-frame { position: relative; }
+
+.stage-enter { animation: stage-in 0.62s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.stage-leave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  animation: stage-out 0.5s ease both;
+  pointer-events: none;
+}
 
 .stage {
   background: rgba(255, 250, 242, 0.72);
@@ -209,7 +227,12 @@ input[type='text'], input:not([type]) {
   padding: 1rem;
 }
 
-.caption { text-align: center; font-size: 1.35rem; margin: 0; }
+.caption {
+  text-align: center;
+  font-size: 1.35rem;
+  margin: 0;
+  animation: fade-up 0.45s ease both;
+}
 
 .night {
   position: relative;
@@ -502,7 +525,7 @@ input[type='text'], input:not([type]) {
   inset: 0;
   opacity: 0;
   background: radial-gradient(circle at 50% 40%, #fff 0%, #ffe7ee 48%, #f6c3d2 100%);
-  animation: wash 1.3s 1.65s ease both;
+  animation: wash 1.25s 2.15s ease both;
 }
 
 .rays {
@@ -511,7 +534,7 @@ input[type='text'], input:not([type]) {
   height: 150vmax;
   opacity: 0;
   background: repeating-conic-gradient(from 0deg, #ffffffd8 0 7deg, #ffffff00 7deg 20deg);
-  animation: wash 1.5s 2.3s ease both, spin-rays 32s linear 2.3s infinite;
+  animation: wash 1.4s 2.45s ease both, spin-rays 32s linear 2.45s infinite;
 }
 
 .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -546,18 +569,42 @@ input[type='text'], input:not([type]) {
 }
 
 .s-slot {
+  position: relative;
   display: inline-block;
   width: 0;
+  height: 1.05em;
   overflow: visible;
-  animation: s-slot 0.65s 1.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: s-slot 0.9s 1.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.s-letter {
-  display: block;
-  color: #c4536c;
-  text-shadow: 0 0.06em 0 #fff;
-  transform-origin: 80% 70%;
-  animation: s-become 0.7s 1.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+.s-draw {
+  position: absolute;
+  left: 0;
+  bottom: -0.02em;
+  width: 0.78em;
+  height: 1.12em;
+  overflow: visible;
+  opacity: 0;
+  animation: wash 0.2s 1.7s both;
+}
+
+.s-stroke,
+.s-sheen {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: ribbon-morph 1.15s 1.9s cubic-bezier(0.45, 0, 0.15, 1) both;
+}
+
+.s-stroke {
+  stroke: url(#sheRibbon);
+  stroke-width: 16;
+}
+
+.s-sheen {
+  stroke: #fff;
+  stroke-width: 4.5;
+  opacity: 0.75;
 }
 
 .he-pair { position: relative; display: inline-flex; }
@@ -568,11 +615,11 @@ input[type='text'], input:not([type]) {
   right: -0.02em;
   bottom: -0.04em;
   height: 0.2em;
-  border-radius: 0.04em;
+  border-radius: 99px;
   background: linear-gradient(180deg, #fff 0%, #f8c9d6 34%, #e9899f 68%, #fff 100%);
   box-shadow: 0 0.09em 0 #e9899f55;
-  transform-origin: right center;
-  animation: satin-to-s 0.95s 1.5s cubic-bezier(0.45, 0, 0.2, 1) both;
+  transform-origin: left center;
+  animation: satin-to-s 0.7s 1.25s cubic-bezier(0.45, 0, 0.2, 1) both;
 }
 
 .satin::before,
@@ -592,7 +639,7 @@ input[type='text'], input:not([type]) {
   font-family: Fraunces, serif;
   font-size: clamp(1.35rem, 4.2vw, 2.45rem);
   margin: 0.85rem 0 0;
-  animation: fade-up 0.65s 2.55s both;
+  animation: fade-up 0.65s 2.75s both;
 }
 
 .nipt {
@@ -678,19 +725,30 @@ input[type='text'], input:not([type]) {
 
 @keyframes s-slot {
   from { width: 0; }
-  to { width: 0.82em; }
+  to { width: 0.78em; }
 }
 
-@keyframes s-become {
-  0% { opacity: 0; transform: translateX(0.45em) scale(0.2, 0.45); filter: blur(2px); }
-  55% { opacity: 1; filter: none; }
-  100% { opacity: 1; transform: none; filter: none; }
+@keyframes draw-s { to { stroke-dashoffset: 0; } }
+
+@keyframes ribbon-morph {
+  from { d: path("M84 108 C64 108 40 108 18 108 C18 108 46 108 78 108 C78 108 48 108 26 108"); }
+  to { d: path("M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"); }
 }
 
 @keyframes satin-to-s {
-  0% { transform: translateX(0) scaleX(1); opacity: 1; }
-  62% { transform: translateX(-0.95em) scaleX(0.42); opacity: 1; }
-  100% { transform: translateX(-1.15em) scaleX(0.12); opacity: 0; }
+  0% { transform: none; opacity: 1; }
+  65% { transform: translate(-0.82em, 0.02em) scaleX(0.45); opacity: 1; }
+  100% { transform: translate(-0.9em, 0.02em) scaleX(0.08); opacity: 0; }
+}
+
+@keyframes stage-in {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes stage-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-18px); }
 }
 
 @keyframes glass-away {
@@ -734,13 +792,14 @@ input[type='text'], input:not([type]) {
 
 @media (prefers-reduced-motion: reduce) {
   .cube.spin-left, .cube.spin-right, .cube.spin-up, .cube.spin-down,
-  .finale-lockup, .s-letter, .s-slot, .satin, .rays, .confetti i, .finale-line,
+  .finale-lockup, .s-slot, .s-stroke, .s-sheen, .satin, .rays, .confetti i, .finale-line,
   .blush, .cup.show-ball .cup-model, .night.found .glass, .night.found .constellation,
-  .taurus-line, .hint-arrow {
+  .taurus-line, .hint-arrow, .stage-enter, .stage-leave, .caption, .letters b, .date.on {
     animation: none;
   }
-  .s-letter, .finale-line, .blush, .taurus-line, .rays { opacity: 1; transform: none; }
-  .s-slot { width: 0.82em; }
+  .finale-line, .blush, .taurus-line, .rays { opacity: 1; transform: none; }
+  .s-slot { width: 0.78em; }
+  .s-stroke, .s-sheen { d: path("M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"); }
   .satin, .night.found .glass, .night.found .star:not(.bull) { opacity: 0; }
   .night.found .constellation { transform: translate(-14%, 8%) scale(1.8); }
 }
