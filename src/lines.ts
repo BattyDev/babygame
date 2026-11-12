@@ -25,7 +25,7 @@ export function watchScript(state: GameState): { kicker: string; say: string; do
   switch (state.phase) {
     case 'intro':
       return {
-        kicker: 'When they open it',
+        kicker: 'Opening',
         say: 'Someone started a sentence and got shy. Want to help finish it?',
         doing: 'Waiting for them to begin.',
       };
@@ -74,13 +74,13 @@ export function watchScript(state: GameState): { kicker: string; say: string; do
       return { kicker: 'The cups', say: 'Keep your eyes on the ball.', doing: 'The cups are moving.' };
     case 'touch':
       return {
-        kicker: 'Let it sit',
+        kicker: 'Last touch',
         say: 'Let them read the word. Then say: almost.',
         doing: 'One last touch is waiting.',
       };
     case 'reveal':
       return {
-        kicker: 'Read it',
+        kicker: 'The sentence',
         say: 'She will be joining our family in early May.',
         doing: 'The sentence is finished.',
       };
