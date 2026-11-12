@@ -552,10 +552,18 @@ input[type='text'], input:not([type]) {
 .confetti i:nth-child(3n) { background: #e9899f; width: 0.85rem; height: 0.5rem; }
 .confetti i:nth-child(4n) { background: #f7c1d0; }
 
-.finale-lockup {
+.finale-stage {
   position: relative;
   z-index: 1;
-  animation: arrive 1.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  display: grid;
+  place-items: center;
+}
+
+.finale-lockup,
+.finale-set { grid-area: 1 / 1; }
+
+.finale-lockup {
+  animation: arrive 1.25s cubic-bezier(0.16, 1, 0.3, 1) both, lockup-out 0.7s 3.15s ease both;
 }
 
 .she-row {
@@ -640,6 +648,33 @@ input[type='text'], input:not([type]) {
   font-size: clamp(1.35rem, 4.2vw, 2.45rem);
   margin: 0.85rem 0 0;
   animation: fade-up 0.65s 2.75s both;
+}
+
+.finale-set {
+  text-align: center;
+  opacity: 0;
+  animation: wash 0.8s 3.15s ease both;
+}
+
+.finale-set p {
+  font-family: Fraunces, serif;
+  font-weight: 560;
+  margin: 0;
+}
+
+.finale-she {
+  font-size: clamp(4.6rem, 22vw, 8.8rem);
+  line-height: 0.9;
+}
+
+.finale-she b {
+  color: #c4536e;
+  font-weight: 560;
+}
+
+.finale-set p + p {
+  font-size: clamp(1.35rem, 4.2vw, 2.45rem);
+  margin-top: 0.85rem;
 }
 
 .nipt {
@@ -771,6 +806,8 @@ input[type='text'], input:not([type]) {
 
 @keyframes wash { from { opacity: 0; } to { opacity: 1; } }
 
+@keyframes lockup-out { to { opacity: 0; } }
+
 @keyframes spin-rays { to { transform: rotate(360deg); } }
 
 @keyframes fade-up {
@@ -793,11 +830,12 @@ input[type='text'], input:not([type]) {
 @media (prefers-reduced-motion: reduce) {
   .cube.spin-left, .cube.spin-right, .cube.spin-up, .cube.spin-down,
   .finale-lockup, .s-slot, .s-stroke, .s-sheen, .satin, .rays, .confetti i, .finale-line,
-  .blush, .cup.show-ball .cup-model, .night.found .glass, .night.found .constellation,
+  .finale-set, .blush, .cup.show-ball .cup-model, .night.found .glass, .night.found .constellation,
   .taurus-line, .hint-arrow, .stage-enter, .stage-leave, .caption, .letters b, .date.on {
     animation: none;
   }
-  .finale-line, .blush, .taurus-line, .rays { opacity: 1; transform: none; }
+  .finale-line, .finale-set, .blush, .taurus-line, .rays { opacity: 1; transform: none; }
+  .finale-lockup { opacity: 0; }
   .s-slot { width: 0.78em; }
   .s-stroke, .s-sheen { d: path("M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"); }
   .satin, .night.found .glass, .night.found .star:not(.bull) { opacity: 0; }

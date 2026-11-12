@@ -46,37 +46,43 @@ export function Finale() {
           />
         ))}
       </div>
-      <div className="finale-lockup">
-        <div className="she-row">
-          <span className="s-slot">
-            <svg className="s-draw" viewBox="0 0 100 128" aria-hidden="true">
-              <defs>
-                <linearGradient id="sheRibbon" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fff" />
-                  <stop offset="32%" stopColor="#f6c2d0" />
-                  <stop offset="68%" stopColor="#d4536e" />
-                  <stop offset="100%" stopColor="#fff4f6" />
-                </linearGradient>
-              </defs>
-              <path
-                className="s-stroke"
-                pathLength="100"
-                d="M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"
-              />
-              <path
-                className="s-sheen"
-                pathLength="100"
-                d="M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"
-              />
-            </svg>
-          </span>
-          <span className="he-pair">
-            <b>H</b>
-            <b>E</b>
-            <i className="satin" aria-hidden="true" />
-          </span>
+      <div className="finale-stage">
+        <div className="finale-lockup ribbon-pass">
+          <div className="she-row">
+            <span className="s-slot">
+              <svg className="s-draw" viewBox="0 0 100 128" aria-hidden="true">
+                <defs>
+                  <linearGradient id="sheRibbon" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fff" />
+                    <stop offset="32%" stopColor="#f6c2d0" />
+                    <stop offset="68%" stopColor="#d4536e" />
+                    <stop offset="100%" stopColor="#fff4f6" />
+                  </linearGradient>
+                </defs>
+                <path
+                  className="s-stroke"
+                  d="M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"
+                />
+                <path
+                  className="s-sheen"
+                  d="M82 30 C82 8 20 6 20 34 C20 58 80 52 80 78 C80 108 18 112 24 88"
+                />
+              </svg>
+            </span>
+            <span className="he-pair">
+              <b>H</b>
+              <b>E</b>
+              <i className="satin" aria-hidden="true" />
+            </span>
+          </div>
+          <p className="finale-line">will be joining our family early May</p>
         </div>
-        <p className="finale-line">will be joining our family early May</p>
+        <div className="finale-set">
+          <p className="finale-she">
+            <b>S</b>HE
+          </p>
+          <p>will be joining our family early May</p>
+        </div>
       </div>
       <p className="nipt">
         A blood test called NIPT says girl. Right almost all the time. Certain when you meet her.
