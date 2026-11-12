@@ -34,35 +34,34 @@ export function Finale() {
     <div className="finale" role="presentation">
       <div className="blush" />
       <div className="rays" />
-      <div className="rays soft" />
-      <div className="flash" />
       <div className="confetti" aria-hidden="true">
-        {Array.from({ length: 46 }, (_, index) => (
+        {Array.from({ length: 32 }, (_, index) => (
           <i
             key={index}
             style={{
-              left: `${(index * 17) % 100}%`,
-              animationDelay: `${(index % 10) * 0.08}s`,
-              animationDuration: `${3.2 + (index % 5) * 0.5}s`,
+              left: `${(index * 19) % 100}%`,
+              animationDelay: `${2.2 + (index % 8) * 0.08}s`,
+              animationDuration: `${3.6 + (index % 4) * 0.4}s`,
             }}
           />
         ))}
       </div>
       <div className="finale-lockup">
         <div className="she-row">
-          <span className="s-letter">S</span>
+          <span className="s-slot">
+            <b className="s-letter">S</b>
+          </span>
           <span className="he-pair">
             <b>H</b>
             <b>E</b>
-            <i className="ribbon-fly" />
+            <i className="satin" aria-hidden="true" />
           </span>
         </div>
-        <p>will be joining our family early May</p>
-        <p className="caveat light">
-          A blood test called NIPT says girl. It is right almost all the time. We will know for
-          certain when we meet her.
-        </p>
+        <p className="finale-line">will be joining our family early May</p>
       </div>
+      <p className="nipt">
+        A blood test called NIPT says girl. Right almost all the time. Certain when you meet her.
+      </p>
     </div>
   );
 }

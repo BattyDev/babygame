@@ -27,7 +27,6 @@ export function Watch() {
             onPatch={() => {}}
             onAdvance={() => {}}
             onTurn={() => {}}
-            onSwap={() => {}}
           />
         )}
         <article className="say">

@@ -53,14 +53,12 @@ export function Stage({
   onPatch,
   onAdvance,
   onTurn,
-  onSwap,
 }: {
   state: GameState;
   readonly?: boolean;
   onPatch: (patch: Partial<GameState>) => void;
   onAdvance: () => void;
   onTurn: (index: number, dir: Exclude<Spin, null>) => void;
-  onSwap: (from: number, to: number) => void;
 }) {
   switch (state.phase) {
     case 'intro':
@@ -74,7 +72,7 @@ export function Stage({
     case 'stars':
       return <Stars state={state} readonly={readonly} onPatch={onPatch} />;
     case 'blocks':
-      return <Blocks state={state} readonly={readonly} onTurn={onTurn} onSwap={onSwap} />;
+      return <Blocks state={state} readonly={readonly} onTurn={onTurn} />;
     case 'cups':
       return <Cups state={state} readonly={readonly} onPatch={onPatch} />;
     case 'touch':
@@ -138,45 +136,51 @@ function Stars({
         }}
       >
         {FIELD.map(([x, y], index) => (
-          <i key={index} className="star" style={starStyle(x, y, state.lensX, state.lensY)} />
+          <i key={index} className="star" style={starStyle(x, y, state.lensX, state.lensY, state.dateLocked)} />
         ))}
-        {TAURUS.map(([x, y], index) => (
-          <i key={`t-${index}`} className="star bull" style={starStyle(x, y, state.lensX, state.lensY)} />
-        ))}
-        <svg className="lines" viewBox="0 0 100 100" aria-hidden="true">
-          {LINES.map(([a, b]) => (
-            <line
-              key={`${a}-${b}`}
-              x1={TAURUS[a][0]}
-              y1={TAURUS[a][1]}
-              x2={TAURUS[b][0]}
-              y2={TAURUS[b][1]}
-            />
+        <div className="constellation">
+          {TAURUS.map(([x, y], index) => (
+            <i key={`t-${index}`} className="star bull" style={starStyle(x, y, state.lensX, state.lensY, state.dateLocked)} />
           ))}
-        </svg>
-        {state.dateLocked && <em className="plaque">early May</em>}
+          <svg className="lines" viewBox="0 0 100 100" aria-hidden="true">
+            {LINES.map(([a, b]) => (
+              <line
+                key={`${a}-${b}`}
+                x1={TAURUS[a][0]}
+                y1={TAURUS[a][1]}
+                x2={TAURUS[b][0]}
+                y2={TAURUS[b][1]}
+              />
+            ))}
+          </svg>
+        </div>
         <div className="glass" style={{ left: `${state.lensX}%`, top: `${state.lensY}%` }} aria-hidden="true" />
       </div>
+      {state.dateLocked && <p className="taurus-line">Is that Taurus? That means early May!</p>}
     </div>
   );
 }
 
-function starStyle(x: number, y: number, lensX: number, lensY: number): CSSProperties {
+function starStyle(x: number, y: number, lensX: number, lensY: number, locked: boolean): CSSProperties {
   const distance = Math.hypot(x - lensX, y - lensY);
-  const scale = distance < 9 ? 2.1 : distance < 16 ? 1.35 : 1;
+  const scale = locked ? 1 : distance < 9 ? 2.1 : distance < 16 ? 1.35 : 1;
   return { left: `${x}%`, top: `${y}%`, transform: `translate(-50%, -50%) scale(${scale})` };
 }
+
+const TILT = [
+  { rx: '22deg', ry: '-38deg' },
+  { rx: '-14deg', ry: '36deg' },
+  { rx: '-34deg', ry: '16deg' },
+];
 
 function Blocks({
   state,
   readonly,
   onTurn,
-  onSwap,
 }: {
   state: GameState;
   readonly: boolean;
   onTurn: (index: number, dir: Exclude<Spin, null>) => void;
-  onSwap: (from: number, to: number) => void;
 }) {
   return (
     <div className="stage">
@@ -186,9 +190,9 @@ function Blocks({
             key={index}
             cube={cube}
             index={index}
+            hint={state.blockHint && !state.blocksDone}
             readonly={readonly || state.blocksDone}
             onTurn={onTurn}
-            onSwap={onSwap}
           />
         ))}
       </div>
@@ -199,25 +203,30 @@ function Blocks({
 function CubeView({
   cube,
   index,
+  hint,
   readonly,
   onTurn,
-  onSwap,
 }: {
   cube: Cube;
   index: number;
+  hint: boolean;
   readonly: boolean;
   onTurn: (index: number, dir: Exclude<Spin, null>) => void;
-  onSwap: (from: number, to: number) => void;
 }) {
   const start = useRef({ x: 0, y: 0 });
+  const tilt = TILT[index] ?? TILT[0];
+  const prize = [cube.front, cube.right, cube.back, cube.left, cube.top, cube.bottom].includes('H');
 
   return (
     <div className="cube-scene">
+      {hint && prize && <i className="hint-arrow" aria-hidden="true" />}
       <div
         className={cube.spin ? `cube spin-${cube.spin}` : 'cube'}
+        style={{ '--rx': tilt.rx, '--ry': tilt.ry } as CSSProperties}
         aria-label={`Block showing ${cube.front}`}
         onPointerDown={(event) => {
           if (readonly) return;
+          event.preventDefault();
           start.current = { x: event.clientX, y: event.clientY };
           try {
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -229,19 +238,10 @@ function CubeView({
           if (readonly) return;
           const dx = event.clientX - start.current.x;
           const dy = event.clientY - start.current.y;
-          const hit = document.elementFromPoint(event.clientX, event.clientY);
-          const other = hit?.closest('[data-cube]');
-          const otherIndex = other ? Number(other.getAttribute('data-cube')) : index;
-          const dist = Math.hypot(dx, dy);
-          if (otherIndex !== index && Number.isFinite(otherIndex) && dist >= 96) {
-            onSwap(index, otherIndex);
-            return;
-          }
           if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
           if (Math.abs(dx) > Math.abs(dy)) onTurn(index, dx < 0 ? 'left' : 'right');
           else onTurn(index, dy < 0 ? 'up' : 'down');
         }}
-        data-cube={index}
       >
         <Face name="front" symbol={cube.front} />
         <Face name="back" symbol={cube.back} />
@@ -290,7 +290,10 @@ function Cups({
             >
               {state.cupBeat === 'show' && id === state.ball && <i className="pea drop" />}
               {state.cupBeat === 'found' && id === state.ball && <i className="pea show-e">E</i>}
-              <span className="cup-body" />
+              <span className="cup-model">
+                <span className="cup-body" />
+                <span className="cup-lip" />
+              </span>
             </button>
           );
         })}

@@ -6,9 +6,9 @@ export function guestLines(state: GameState): string {
     case 'intro':
       return `${who} started a sentence and got shy. Help finish it.`;
     case 'stars':
-      return state.dateLocked ? 'Early May.' : 'Drag the glass across the stars.';
+      return state.dateLocked ? '' : 'Drag the glass across the stars.';
     case 'blocks':
-      return state.blocksDone ? 'H.' : 'Turn the blocks until the letters face you.';
+      return state.blocksDone ? 'H.' : 'Turn the blocks. One of them is hiding a letter.';
     case 'cups':
       if (state.cupBeat === 'ready') return 'Say when.';
       if (state.cupBeat === 'show' || state.cupBeat === 'shuffle') return 'Watch the ball.';
@@ -33,8 +33,8 @@ export function watchScript(state: GameState): { kicker: string; say: string; do
       return state.dateLocked
         ? {
             kicker: 'The sky',
-            say: 'Early May. The bull gave the month away.',
-            doing: 'The stars just connected.',
+            say: 'Is that Taurus? That means early May!',
+            doing: 'The bull is coming forward.',
           }
         : {
             kicker: 'The sky',
@@ -46,12 +46,12 @@ export function watchScript(state: GameState): { kicker: string; say: string; do
         ? {
             kicker: 'The blocks',
             say: 'Just an H.',
-            doing: 'Every block is showing H.',
+            doing: 'The letter is facing them.',
           }
         : {
             kicker: 'The blocks',
-            say: 'A letter is hidden on each block. Turn them until they match.',
-            doing: 'They are turning the blocks.',
+            say: 'A letter is hidden on one block. Turn that one toward you.',
+            doing: state.blockHint ? 'The arrow is on the block with the letter.' : 'They are turning the blocks.',
           };
     case 'cups':
       if (state.cupBeat === 'ready') {

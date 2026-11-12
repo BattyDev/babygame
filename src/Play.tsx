@@ -4,6 +4,7 @@ import {
   applySwap,
   freshState,
   loadState,
+  nextTurnTowardH,
   saveState,
   turnCube,
   type GameState,
@@ -46,7 +47,7 @@ export function Play() {
             ? { ...current, phase: 'blocks', updatedAt: Date.now() }
             : current,
         );
-      }, 3200);
+      }, 7200);
       return () => window.clearTimeout(timer);
     }
     if (state.phase === 'blocks' && state.blocksDone) {
@@ -113,13 +114,55 @@ export function Play() {
         updatedAt: Date.now(),
       };
     });
-    }, 320);
+    }, 500);
     return () => window.clearTimeout(timer);
   }, [state.cubes]);
 
   useEffect(() => {
     document.title = state.phase === 'reveal' ? 'She will be joining our family' : 'A sentence for you';
   }, [state.phase]);
+
+  useEffect(() => {
+    if (state.phase !== 'blocks' || state.blocksDone) return;
+    const extras: number[] = [];
+    const point = window.setTimeout(() => {
+      setState((current) =>
+        current.phase === 'blocks' && !current.blocksDone
+          ? { ...current, blockHint: true, updatedAt: Date.now() }
+          : current,
+      );
+    }, 30000);
+    const solve = window.setTimeout(() => {
+      const step = () => {
+        setState((current) => {
+          if (current.phase !== 'blocks' || current.blocksDone) return current;
+          const index = current.cubes.findIndex((cube) =>
+            [cube.front, cube.right, cube.back, cube.left, cube.top, cube.bottom].includes('H'),
+          );
+          if (index < 0) return current;
+          const dir = nextTurnTowardH(current.cubes[index]);
+          if (!dir) return { ...current, blocksDone: true, blockHint: true, updatedAt: Date.now() };
+          const cubes = current.cubes.map((cube, cubeIndex) =>
+            cubeIndex === index ? turnCube(cube, dir) : cube,
+          );
+          return {
+            ...current,
+            cubes,
+            blocksDone: cubes[index].front === 'H',
+            blockHint: true,
+            updatedAt: Date.now(),
+          };
+        });
+      };
+      step();
+      extras.push(window.setTimeout(step, 520));
+    }, 60000);
+    return () => {
+      window.clearTimeout(point);
+      window.clearTimeout(solve);
+      extras.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [state.phase, state.blocksDone]);
 
   const caption = guestLines(state);
 
@@ -137,32 +180,20 @@ export function Play() {
     setState((current) => {
       if (current.blocksDone) return current;
       const cubes = current.cubes.map((cube, cubeIndex) => (cubeIndex === index ? turnCube(cube, dir) : cube));
-      const blocksDone = cubes.every((cube) => cube.front === 'H');
+      const blocksDone = cubes.some((cube) => cube.front === 'H');
       return { ...current, cubes, blocksDone, updatedAt: Date.now() };
     });
     navigator.vibrate?.(8);
   };
 
-  const onSwap = (from: number, to: number) => {
-    setState((current) => {
-      if (current.blocksDone || to < 0 || to >= current.cubes.length) return current;
-      const cubes = [...current.cubes];
-      [cubes[from], cubes[to]] = [cubes[to], cubes[from]];
-      return {
-        ...current,
-        cubes,
-        blocksDone: cubes.every((cube) => cube.front === 'H'),
-        updatedAt: Date.now(),
-      };
-    });
-  };
+  const showCaption = state.phase !== 'reveal' && !(state.phase === 'stars' && state.dateLocked);
 
   return (
     <main className={`play ${phaseClass(state.phase)}`}>
       {state.phase === 'reveal' && <Finale />}
       <Sentence state={state} />
-      <Stage state={state} onPatch={patch} onAdvance={advance} onTurn={onTurn} onSwap={onSwap} />
-      {state.phase !== 'reveal' && caption && <p className="caption">{caption}</p>}
+      <Stage state={state} onPatch={patch} onAdvance={advance} onTurn={onTurn} />
+      {showCaption && caption && <p className="caption">{caption}</p>}
       <p className={linked ? 'link-dot on' : 'link-dot'}>{linked ? 'She can see this' : 'On your phone'}</p>
     </main>
   );

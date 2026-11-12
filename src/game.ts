@@ -29,6 +29,7 @@ export interface GameState {
   swaps: number[];
   swapAt: number;
   miss: number | null;
+  blockHint: boolean;
   revision: number;
   updatedAt: number;
 }
@@ -48,10 +49,23 @@ export function makeCube(
 
 export function startingCubes(): Cube[] {
   return [
-    makeCube('★', '☾', 'H', '✦', '◆', '●'),
-    makeCube('☾', '✦', '◆', 'H', '●', '★'),
-    makeCube('◆', '●', '✦', '☾', '★', 'H'),
+    makeCube('★', '☾', '✦', '◆', '●', '✦'),
+    makeCube('✦', '●', 'H', '◆', '★', '☾'),
+    makeCube('◆', '★', '●', '☾', '✦', '★'),
   ];
+}
+
+export function cubeHasH(cube: Cube): boolean {
+  return [cube.front, cube.right, cube.back, cube.left, cube.top, cube.bottom].includes('H');
+}
+
+export function nextTurnTowardH(cube: Cube): Exclude<Spin, null> | null {
+  if (cube.front === 'H') return null;
+  if (cube.right === 'H') return 'left';
+  if (cube.left === 'H') return 'right';
+  if (cube.bottom === 'H') return 'up';
+  if (cube.top === 'H') return 'down';
+  return 'left';
 }
 
 export function turnCube(cube: Cube, dir: Exclude<Spin, null>): Cube {
@@ -92,6 +106,7 @@ export function freshState(code: string, guestName: string, revision = 0): GameS
     swaps: [],
     swapAt: 0,
     miss: null,
+    blockHint: false,
     revision,
     updatedAt: Date.now(),
   };
@@ -105,11 +120,15 @@ export function loadState(code: string, guestName: string): GameState {
     if (!parsed || parsed.code !== code || !parsed.phase || !PHASES.has(parsed.phase)) {
       return freshState(code, guestName);
     }
+    const savedCubes = Array.isArray(parsed.cubes) ? parsed.cubes : [];
+    const cubesOk = savedCubes.length === 3 && savedCubes.filter((cube) => cubeHasH(cube)).length === 1;
     const base = freshState(code, guestName);
     return {
       ...base,
       ...parsed,
-      cubes: Array.isArray(parsed.cubes) && parsed.cubes.length === 3 ? parsed.cubes : base.cubes,
+      cubes: cubesOk ? savedCubes : base.cubes,
+      blocksDone: cubesOk ? Boolean(parsed.blocksDone) : false,
+      blockHint: Boolean(parsed.blockHint),
       order: Array.isArray(parsed.order) && parsed.order.length === 3 ? parsed.order : base.order,
       guestName: guestName || parsed.guestName || '',
       revision: typeof parsed.revision === 'number' ? parsed.revision : 0,
