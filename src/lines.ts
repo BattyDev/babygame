@@ -1,38 +1,23 @@
 import type { GameState, Phase } from './game';
 
-export function guestLines(state: GameState): { caption: string; action?: string; step: string } {
+export function guestLines(state: GameState): string {
   const who = state.guestName ? `${state.guestName}, someone` : 'Someone';
   switch (state.phase) {
     case 'intro':
-      return {
-        step: 'A short one',
-        caption: `${who} started a sentence and got shy. Help finish it.`,
-        action: 'Begin',
-      };
-    case 'vine':
-      return state.vineLocked
-        ? { step: '1 of 4', caption: 'Early May. That is the when.', action: 'Add it to the sentence' }
-        : { step: '1 of 4', caption: 'Slide the sun until the branch remembers.' };
-    case 'block':
-      return state.blockPlaced
-        ? { step: '2 of 4', caption: 'H. Just an H.', action: 'Add the letter' }
-        : { step: '2 of 4', caption: 'The sign is missing a piece. One block fits.' };
-    case 'fireflies':
-      return {
-        step: '3 of 4',
-        caption:
-          state.fireflies === 0
-            ? 'Top one first. Then the left. Then the little one on the flower.'
-            : `${state.fireflies} of 3. Keep the order.`,
-      };
-    case 'hold':
-      return { step: 'Look', caption: 'Read the first word.', action: 'One more' };
-    case 'ribbon':
-      return state.ribbonLocked
-        ? { step: '4 of 4', caption: 'It wants the front of the word.', action: 'Let it in' }
-        : { step: '4 of 4', caption: 'The last mark is a ribbon. Smooth it flat.' };
+      return `${who} started a sentence and got shy. Help finish it.`;
+    case 'stars':
+      return state.dateLocked ? 'Early May.' : 'Drag the glass across the stars.';
+    case 'blocks':
+      return state.blocksDone ? 'H.' : 'Turn the blocks until the letters face you.';
+    case 'cups':
+      if (state.cupBeat === 'ready') return 'Say when.';
+      if (state.cupBeat === 'show' || state.cupBeat === 'shuffle') return 'Watch the ball.';
+      if (state.cupBeat === 'found') return 'E.';
+      return state.miss != null ? 'Empty. Try another.' : 'Lift a cup.';
+    case 'touch':
+      return 'One last touch.';
     case 'reveal':
-      return { step: 'The sentence', caption: 'She will be joining our family in early May.' };
+      return 'She will be joining our family in early May.';
   }
 }
 
@@ -44,55 +29,55 @@ export function watchScript(state: GameState): { kicker: string; say: string; do
         say: 'Someone started a sentence and got shy. Want to help finish it?',
         doing: 'Waiting for them to begin.',
       };
-    case 'vine':
-      return state.vineLocked
+    case 'stars':
+      return state.dateLocked
         ? {
-            kicker: 'The vine',
-            say: 'Early May. Ask them to add it to the sentence.',
-            doing: 'The branch bloomed.',
+            kicker: 'The sky',
+            say: 'Early May. The bull gave the month away.',
+            doing: 'The stars just connected.',
           }
         : {
-            kicker: 'The vine',
-            say: 'Slide the sun until the branch remembers the month.',
-            doing: 'They are moving the sun.',
+            kicker: 'The sky',
+            say: 'Drag the glass over the stars. The bull marks the month.',
+            doing: 'They are sweeping the sky.',
           };
-    case 'block':
-      return state.blockPlaced
+    case 'blocks':
+      return state.blocksDone
         ? {
-            kicker: 'The sign',
-            say: 'Just an H. Let them set it in the sentence.',
-            doing: 'The H is in the sign.',
+            kicker: 'The blocks',
+            say: 'Just an H.',
+            doing: 'Every block is showing H.',
           }
         : {
-            kicker: 'The sign',
-            say: 'One of those blocks belongs in the gap.',
-            doing: 'They are choosing a block.',
+            kicker: 'The blocks',
+            say: 'A letter is hidden on each block. Turn them until they match.',
+            doing: 'They are turning the blocks.',
           };
-    case 'fireflies':
-      return {
-        kicker: 'The fireflies',
-        say: 'Top one first. Then the left. Then the little one on the flower.',
-        doing:
-          state.fireflies === 0 ? 'Looking at the dusk.' : `Caught ${state.fireflies} of 3, in order.`,
-      };
-    case 'hold':
+    case 'cups':
+      if (state.cupBeat === 'ready') {
+        return {
+          kicker: 'The cups',
+          say: 'When you are ready, watch the ball.',
+          doing: 'Waiting for them to start.',
+        };
+      }
+      if (state.cupBeat === 'guess') {
+        return {
+          kicker: 'The cups',
+          say: 'Which cup?',
+          doing: state.miss != null ? 'That one was empty.' : 'They are choosing a cup.',
+        };
+      }
+      if (state.cupBeat === 'found') {
+        return { kicker: 'The cups', say: 'E. Look at the word.', doing: 'They found it.' };
+      }
+      return { kicker: 'The cups', say: 'Keep your eyes on the ball.', doing: 'The cups are moving.' };
+    case 'touch':
       return {
         kicker: 'Let it sit',
-        say: 'Let them read the first word. Then say: almost.',
-        doing: 'This is the pause. The word looks unfinished.',
+        say: 'Let them read the word. Then say: almost.',
+        doing: 'One last touch is waiting.',
       };
-    case 'ribbon':
-      return state.ribbonLocked
-        ? {
-            kicker: 'The ribbon',
-            say: 'It wants the front of the word. Let them bring it in.',
-            doing: 'The ribbon is smooth.',
-          }
-        : {
-            kicker: 'The ribbon',
-            say: 'The last mark is a ribbon. Smooth it flat.',
-            doing: 'They are smoothing the ribbon.',
-          };
     case 'reveal':
       return {
         kicker: 'Read it',
@@ -103,5 +88,7 @@ export function watchScript(state: GameState): { kicker: string; say: string; do
 }
 
 export function phaseClass(phase: Phase): string {
-  return phase === 'reveal' ? 'reveal' : phase === 'hold' ? 'hold' : '';
+  if (phase === 'reveal') return 'reveal';
+  if (phase === 'touch') return 'touch';
+  return '';
 }

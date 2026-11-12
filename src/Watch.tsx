@@ -3,8 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { screenPaths } from './Home';
 import { phaseClass, watchScript } from './lines';
-import { Petals } from './puzzles';
-import { Sentence } from './Sentence';
+import { Stage } from './puzzles';
+import { Finale, Sentence } from './Sentence';
 import { useWatchSync } from './sync';
 
 export function Watch() {
@@ -17,20 +17,24 @@ export function Watch() {
 
   return (
     <main className={`watch ${phaseClass(state.phase)}`}>
-      {state.phase === 'reveal' && <Petals />}
+      {state.phase === 'reveal' && <Finale />}
       <section className="watch-story">
         <Sentence state={state} large />
+        {state.phase !== 'reveal' && state.phase !== 'intro' && (
+          <Stage
+            state={state}
+            readonly
+            onPatch={() => {}}
+            onAdvance={() => {}}
+            onTurn={() => {}}
+            onSwap={() => {}}
+          />
+        )}
         <article className="say">
           <small>{script.kicker}</small>
           <p>{script.say}</p>
           <span>{live ? script.doing : 'Send the link. This screen follows their phone.'}</span>
         </article>
-        {state.phase === 'reveal' && (
-          <p className="caveat">
-            A blood test called NIPT says girl. It is right almost all the time. We will know for
-            certain when we meet her.
-          </p>
-        )}
       </section>
       <aside className="watch-side">
         <p className={live ? 'link-dot on' : 'link-dot'}>{live ? 'Live with their phone' : 'Waiting for them'}</p>

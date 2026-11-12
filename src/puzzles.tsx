@@ -1,195 +1,194 @@
-import type { ReactNode } from 'react';
-import type { GameState } from './game';
-import { DragMeter } from './DragMeter';
+import { useRef, type CSSProperties } from 'react';
+import type { Cube, GameState, Spin } from './game';
 
-const FIREFLIES = ['top', 'left', 'flower'] as const;
+const TAURUS: Array<[number, number]> = [
+  [52, 18],
+  [60, 32],
+  [64, 40],
+  [70, 32],
+  [78, 16],
+  [60, 52],
+  [74, 50],
+];
+
+const LINES: Array<[number, number]> = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [2, 5],
+  [5, 6],
+];
+
+const FIELD: Array<[number, number]> = [
+  [8, 14],
+  [16, 28],
+  [12, 48],
+  [22, 62],
+  [8, 78],
+  [28, 18],
+  [34, 44],
+  [30, 72],
+  [42, 16],
+  [46, 58],
+  [40, 82],
+  [58, 70],
+  [62, 84],
+  [74, 68],
+  [82, 40],
+  [88, 22],
+  [90, 58],
+  [84, 80],
+  [50, 30],
+  [24, 88],
+  [70, 14],
+  [14, 40],
+];
+
+const TAURUS_AT = { x: 65, y: 36 };
 
 export function Stage({
   state,
+  readonly = false,
   onPatch,
   onAdvance,
+  onTurn,
+  onSwap,
 }: {
   state: GameState;
+  readonly?: boolean;
   onPatch: (patch: Partial<GameState>) => void;
   onAdvance: () => void;
+  onTurn: (index: number, dir: Exclude<Spin, null>) => void;
+  onSwap: (from: number, to: number) => void;
 }) {
   switch (state.phase) {
     case 'intro':
       return (
         <div className="stage intro-stage">
-          <p className="quiet">Four little things. Then the sentence can finish.</p>
-          <button className="go" type="button" onClick={onAdvance}>
+          <button className="go" type="button" onClick={onAdvance} disabled={readonly}>
             Begin
           </button>
         </div>
       );
-    case 'vine':
+    case 'stars':
+      return <Stars state={state} readonly={readonly} onPatch={onPatch} />;
+    case 'blocks':
+      return <Blocks state={state} readonly={readonly} onTurn={onTurn} onSwap={onSwap} />;
+    case 'cups':
+      return <Cups state={state} readonly={readonly} onPatch={onPatch} />;
+    case 'touch':
+      if (readonly) return null;
       return (
-        <Vine
-          value={state.vine}
-          locked={state.vineLocked}
-          onChange={(vine) => {
-            if (state.vineLocked) return;
-            const locked = vine >= 97;
-            onPatch(locked ? { vine: 100, vineLocked: true } : { vine });
-            if (locked) navigator.vibrate?.(12);
-          }}
-          onAdvance={onAdvance}
-        />
-      );
-    case 'block':
-      return (
-        <Blocks
-          placed={state.blockPlaced}
-          onPick={(letter) => {
-            if (letter === 'H') {
-              onPatch({ blockPlaced: true });
-              navigator.vibrate?.(12);
-            }
-          }}
-          onAdvance={onAdvance}
-        />
-      );
-    case 'fireflies':
-      return (
-        <Fireflies
-          progress={state.fireflies}
-          onTap={(id) => {
-            if (state.fireflies >= 3) return;
-            if (id === FIREFLIES[state.fireflies]) onPatch({ fireflies: state.fireflies + 1 });
-            else onPatch({ fireflies: 0 });
-          }}
-        />
-      );
-    case 'hold':
-      return (
-        <div className="stage hold-stage">
-          <p className="quiet">The first word is still missing something.</p>
-          <button className="go" type="button" onClick={onAdvance}>
-            One more
+        <div className="stage touch-stage">
+          <button className="go last" type="button" onClick={onAdvance}>
+            One last touch
           </button>
         </div>
       );
-    case 'ribbon':
-      return (
-        <Ribbon
-          value={state.ribbon}
-          locked={state.ribbonLocked}
-          onChange={(ribbon) => {
-            if (state.ribbonLocked) return;
-            const locked = ribbon >= 97;
-            onPatch(locked ? { ribbon: 100, ribbonLocked: true } : { ribbon });
-            if (locked) navigator.vibrate?.(12);
-          }}
-          onAdvance={onAdvance}
-        />
-      );
     case 'reveal':
-      return (
-        <div className="stage reveal-stage">
-          <p className="caveat">
-            A blood test called NIPT says girl. It is right almost all the time. We will know for
-            certain when we meet her.
-          </p>
-        </div>
-      );
+      return null;
   }
 }
 
-function Vine({
-  value,
-  locked,
-  onChange,
-  onAdvance,
+function Stars({
+  state,
+  readonly,
+  onPatch,
 }: {
-  value: number;
-  locked: boolean;
-  onChange: (value: number) => void;
-  onAdvance: () => void;
+  state: GameState;
+  readonly: boolean;
+  onPatch: (patch: Partial<GameState>) => void;
 }) {
-  const blooms = [18, 34, 50, 66, 82];
+  const sky = useRef<HTMLDivElement>(null);
+  const last = useRef(0);
+
+  const move = (clientX: number, clientY: number, force: boolean) => {
+    if (readonly || state.dateLocked) return;
+    const rect = sky.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = clamp(((clientX - rect.left) / rect.width) * 100, 6, 94);
+    const y = clamp(((clientY - rect.top) / rect.height) * 100, 8, 90);
+    const now = performance.now();
+    const distance = Math.hypot(x - TAURUS_AT.x, y - TAURUS_AT.y);
+    const locked = distance < 12;
+    if (!force && !locked && now - last.current < 90) return;
+    last.current = now;
+    onPatch(locked ? { lensX: TAURUS_AT.x, lensY: TAURUS_AT.y, dateLocked: true } : { lensX: x, lensY: y });
+    if (locked) navigator.vibrate?.(12);
+  };
+
+  const near = Math.hypot(state.lensX - TAURUS_AT.x, state.lensY - TAURUS_AT.y) < 20;
+
   return (
     <div className="stage">
-      <div className="vine-card" aria-hidden="true">
-        <div className="sun" style={{ left: `${8 + value * 0.78}%` }} />
-        <div className="branch" />
-        {blooms.map((at) => (
-          <i
-            key={at}
-            className="bloom"
-            style={{
-              left: `${at}%`,
-              opacity: Math.min(1, Math.max(0, (value - (at - 28)) / 22)),
-              transform: `scale(${0.4 + Math.min(1, Math.max(0, (value - (at - 28)) / 22)) * 0.6})`,
-            }}
-          />
+      <div
+        ref={sky}
+        className={state.dateLocked ? 'night found' : near ? 'night warm' : 'night'}
+        onPointerDown={(event) => {
+          move(event.clientX, event.clientY, true);
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            /* drag still tracks while the pointer stays over the sky */
+          }
+        }}
+        onPointerMove={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) move(event.clientX, event.clientY, false);
+        }}
+      >
+        {FIELD.map(([x, y], index) => (
+          <i key={index} className="star" style={starStyle(x, y, state.lensX, state.lensY)} />
         ))}
-        {locked && <em className="plaque">early May</em>}
+        {TAURUS.map(([x, y], index) => (
+          <i key={`t-${index}`} className="star bull" style={starStyle(x, y, state.lensX, state.lensY)} />
+        ))}
+        <svg className="lines" viewBox="0 0 100 100" aria-hidden="true">
+          {LINES.map(([a, b]) => (
+            <line
+              key={`${a}-${b}`}
+              x1={TAURUS[a][0]}
+              y1={TAURUS[a][1]}
+              x2={TAURUS[b][0]}
+              y2={TAURUS[b][1]}
+            />
+          ))}
+        </svg>
+        {state.dateLocked && <em className="plaque">early May</em>}
+        <div className="glass" style={{ left: `${state.lensX}%`, top: `${state.lensY}%` }} aria-hidden="true" />
       </div>
-      <DragMeter label="Slide the sun toward summer" value={value} disabled={locked} onChange={onChange} />
-      {locked && (
-        <button className="go" type="button" onClick={onAdvance}>
-          Add it to the sentence
-        </button>
-      )}
     </div>
   );
+}
+
+function starStyle(x: number, y: number, lensX: number, lensY: number): CSSProperties {
+  const distance = Math.hypot(x - lensX, y - lensY);
+  const scale = distance < 9 ? 2.1 : distance < 16 ? 1.35 : 1;
+  return { left: `${x}%`, top: `${y}%`, transform: `translate(-50%, -50%) scale(${scale})` };
 }
 
 function Blocks({
-  placed,
-  onPick,
-  onAdvance,
+  state,
+  readonly,
+  onTurn,
+  onSwap,
 }: {
-  placed: boolean;
-  onPick: (letter: string) => void;
-  onAdvance: () => void;
+  state: GameState;
+  readonly: boolean;
+  onTurn: (index: number, dir: Exclude<Spin, null>) => void;
+  onSwap: (from: number, to: number) => void;
 }) {
-  const choices = [
-    { id: 'star', label: '★' },
-    { id: 'H', label: 'H' },
-    { id: 'moon', label: '☾' },
-  ];
   return (
     <div className="stage">
-      <div className="sign" aria-hidden="true">
-        <div className={placed ? 'gap filled' : 'gap'}>{placed ? 'H' : ''}</div>
-      </div>
-      <div className="choices">
-        {choices.map((choice) => (
-          <button
-            key={choice.id}
-            type="button"
-            className="choice"
-            disabled={placed}
-            onClick={() => onPick(choice.id)}
-          >
-            {choice.label}
-          </button>
-        ))}
-      </div>
-      {placed && (
-        <button className="go" type="button" onClick={onAdvance}>
-          Add the letter
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Fireflies({ progress, onTap }: { progress: number; onTap: (id: string) => void }) {
-  return (
-    <div className="stage">
-      <div className="sky">
-        <i className="moon" />
-        <i className="flower" />
-        {FIREFLIES.map((id, index) => (
-          <button
-            key={id}
-            type="button"
-            className={`fly ${id}${index < progress ? ' caught' : ''}`}
-            aria-label={id === 'top' ? 'Top firefly' : id === 'left' ? 'Left firefly' : 'Firefly on the flower'}
-            onClick={() => onTap(id)}
+      <div className={state.blocksDone ? 'table lined' : 'table'}>
+        {state.cubes.map((cube, index) => (
+          <CubeView
+            key={index}
+            cube={cube}
+            index={index}
+            readonly={readonly || state.blocksDone}
+            onTurn={onTurn}
+            onSwap={onSwap}
           />
         ))}
       </div>
@@ -197,41 +196,123 @@ function Fireflies({ progress, onTap }: { progress: number; onTap: (id: string) 
   );
 }
 
-function Ribbon({
-  value,
-  locked,
-  onChange,
-  onAdvance,
+function CubeView({
+  cube,
+  index,
+  readonly,
+  onTurn,
+  onSwap,
 }: {
-  value: number;
-  locked: boolean;
-  onChange: (value: number) => void;
-  onAdvance: () => void;
+  cube: Cube;
+  index: number;
+  readonly: boolean;
+  onTurn: (index: number, dir: Exclude<Spin, null>) => void;
+  onSwap: (from: number, to: number) => void;
 }) {
-  const curl = 1 - value / 100;
+  const start = useRef({ x: 0, y: 0 });
+
+  return (
+    <div className="cube-scene">
+      <div
+        className={cube.spin ? `cube spin-${cube.spin}` : 'cube'}
+        aria-label={`Block showing ${cube.front}`}
+        onPointerDown={(event) => {
+          if (readonly) return;
+          start.current = { x: event.clientX, y: event.clientY };
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            /* a mouse drag still works without capture */
+          }
+        }}
+        onPointerUp={(event) => {
+          if (readonly) return;
+          const dx = event.clientX - start.current.x;
+          const dy = event.clientY - start.current.y;
+          const hit = document.elementFromPoint(event.clientX, event.clientY);
+          const other = hit?.closest('[data-cube]');
+          const otherIndex = other ? Number(other.getAttribute('data-cube')) : index;
+          const dist = Math.hypot(dx, dy);
+          if (otherIndex !== index && Number.isFinite(otherIndex) && dist >= 96) {
+            onSwap(index, otherIndex);
+            return;
+          }
+          if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
+          if (Math.abs(dx) > Math.abs(dy)) onTurn(index, dx < 0 ? 'left' : 'right');
+          else onTurn(index, dy < 0 ? 'up' : 'down');
+        }}
+        data-cube={index}
+      >
+        <Face name="front" symbol={cube.front} />
+        <Face name="back" symbol={cube.back} />
+        <Face name="right" symbol={cube.right} />
+        <Face name="left" symbol={cube.left} />
+        <Face name="top" symbol={cube.top} />
+        <Face name="bottom" symbol={cube.bottom} />
+      </div>
+    </div>
+  );
+}
+
+function Face({ name, symbol }: { name: string; symbol: string }) {
+  return <span className={symbol === 'H' ? `face ${name} letter` : `face ${name}`}>{symbol}</span>;
+}
+
+function Cups({
+  state,
+  readonly,
+  onPatch,
+}: {
+  state: GameState;
+  readonly: boolean;
+  onPatch: (patch: Partial<GameState>) => void;
+}) {
+  const lifting = (id: number) => state.miss === id || (state.cupBeat === 'found' && state.ball === id);
+
   return (
     <div className="stage">
-      <div className="ribbon-card" aria-hidden="true">
-        <span className="ribbon-letter" style={{ transform: `rotate(${curl * 28}deg) scaleX(${1 - curl * 0.18})` }}>
-          S
-        </span>
+      <div className="shell">
+        {[0, 1, 2].map((id) => {
+          const slot = state.order.indexOf(id);
+          return (
+            <button
+              key={id}
+              type="button"
+              className={
+                lifting(id) ? 'cup lifted' : state.cupBeat === 'show' && id === state.ball ? 'cup show-ball' : 'cup'
+              }
+              style={{ transform: `translateX(${slot * 6.4}rem)` }}
+              disabled={readonly || state.cupBeat !== 'guess'}
+              onClick={() => {
+                if (id === state.ball) onPatch({ cupBeat: 'found', miss: null });
+                else onPatch({ miss: id });
+              }}
+            >
+              {state.cupBeat === 'show' && id === state.ball && <i className="pea drop" />}
+              {state.cupBeat === 'found' && id === state.ball && <i className="pea show-e">E</i>}
+              <span className="cup-body" />
+            </button>
+          );
+        })}
       </div>
-      <DragMeter label="Smooth the ribbon" value={value} disabled={locked} onChange={onChange} />
-      {locked && (
-        <button className="go" type="button" onClick={onAdvance}>
-          Let it in
+      {state.cupBeat === 'ready' && !readonly && (
+        <button
+          className="go"
+          type="button"
+          disabled={readonly}
+          onClick={() => {
+            const ball = Math.floor(Math.random() * 3);
+            const swaps = Array.from({ length: 7 }, () => (Math.random() < 0.5 ? 0 : 1));
+            onPatch({ cupBeat: 'show', ball, swaps, swapAt: 0, order: [0, 1, 2], miss: null });
+          }}
+        >
+          Ready
         </button>
       )}
     </div>
   );
 }
 
-export function Petals(): ReactNode {
-  return (
-    <div className="petals" aria-hidden="true">
-      {Array.from({ length: 10 }, (_, index) => (
-        <i key={index} style={{ left: `${(index * 11) % 100}%`, animationDelay: `${index * 0.4}s` }} />
-      ))}
-    </div>
-  );
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
