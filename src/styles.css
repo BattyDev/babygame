@@ -662,14 +662,17 @@ input[type='text'], input:not([type]) {
   margin: 0;
 }
 
-.finale-she {
-  font-size: clamp(4.6rem, 22vw, 8.8rem);
-  line-height: 0.9;
+.finale-set .finale-she {
+  font-family: "Cormorant Infant", serif;
+  font-weight: 500;
+  font-size: clamp(5rem, 24vw, 9.4rem);
+  line-height: 0.8;
+  letter-spacing: 0.03em;
 }
 
 .finale-she b {
   color: #c4536e;
-  font-weight: 560;
+  font-weight: 500;
 }
 
 .finale-set p + p {
