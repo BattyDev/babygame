@@ -103,7 +103,7 @@ export function Play() {
   }, [state.cubes]);
 
   useEffect(() => {
-    document.title = state.phase === 'reveal' ? 'She will be joining our family' : 'A sentence for you';
+    document.title = state.phase === 'reveal' ? 'She will be joining our family' : 'Big News from Kylie and Cody';
   }, [state.phase]);
 
   useEffect(() => {
