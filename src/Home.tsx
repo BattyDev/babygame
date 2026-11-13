@@ -14,21 +14,19 @@ export function Home() {
 
   return (
     <main className="home">
-      <p className="eyebrow">On a call</p>
+      <p className="eyebrow">A little story</p>
       <h1>A sentence is waiting.</h1>
-      <p className="lede">
-        Open this on the laptop. Send them the play link. Read the card out loud while they tap.
-      </p>
+      <p className="lede">Someone started it and got shy. Help finish it.</p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
           const code = randomCode();
           const trimmed = name.trim().replace(/[/#?]/g, '');
-          navigate(trimmed ? `/watch/${code}/${trimmed}` : `/watch/${code}`);
+          navigate(trimmed ? `/play/${code}/${trimmed}` : `/play/${code}`);
         }}
       >
         <label>
-          Their name
+          Your name
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -38,18 +36,9 @@ export function Home() {
           />
         </label>
         <button className="go" type="submit">
-          Start a call
+          Begin
         </button>
       </form>
     </main>
   );
-}
-
-export function screenPaths(code: string, name: string): { play: string; watch: string } {
-  const origin = `${window.location.origin}${import.meta.env.BASE_URL}`;
-  const namePart = name.trim() ? `/${encodeURIComponent(name.trim())}` : '';
-  return {
-    play: `${origin}#/play/${code}${namePart}`,
-    watch: `${origin}#/watch/${code}${namePart}`,
-  };
 }

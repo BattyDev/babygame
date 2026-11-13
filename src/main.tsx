@@ -7,7 +7,7 @@ document.addEventListener(
   'touchmove',
   (event) => {
     const target = event.target as HTMLElement | null;
-    if (target?.closest('input, textarea, .watch')) return;
+    if (target?.closest('input, textarea')) return;
     event.preventDefault();
   },
   { passive: false },

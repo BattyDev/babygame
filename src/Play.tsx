@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   applySwap,
-  freshState,
   loadState,
   nextTurnTowardH,
   saveState,
@@ -14,30 +13,15 @@ import {
 import { guestLines, phaseClass } from './lines';
 import { Stage } from './puzzles';
 import { Finale, Sentence } from './Sentence';
-import { usePlaySync } from './sync';
 
 export function Play() {
   const { code = '', name = '' } = useParams();
   const guestName = decodeName(name);
   const [state, setState] = useState<GameState>(() => loadState(code, guestName));
-  const stateRef = useRef(state);
-  stateRef.current = state;
-
-  const { linked, publish } = usePlaySync(
-    code,
-    () => stateRef.current,
-    (revision) => {
-      const next = freshState(code, guestName, revision);
-      stateRef.current = next;
-      saveState(next);
-      setState(next);
-    },
-  );
 
   useEffect(() => {
     saveState(state);
-    publish(state);
-  }, [state, publish]);
+  }, [state]);
 
   useEffect(() => {
     if (state.phase === 'stars' && state.dateLocked) {
@@ -198,7 +182,6 @@ export function Play() {
           {caption}
         </p>
       )}
-      <p className={linked ? 'link-dot on' : 'link-dot'}>{linked ? 'She can see this' : 'On your phone'}</p>
     </main>
   );
 }
